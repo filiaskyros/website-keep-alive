@@ -1,0 +1,39 @@
+name: Supabase Keep Alive (With Dummy Table)
+
+on:
+  schedule:
+    - cron: '0 0 * * 1' # Κάθε Δευτέρα, μεσάνυχτα UTC
+  workflow_dispatch: # Δυνατότητα manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install @supabase/supabase-js
+
+      - name: Run Supabase Keep Alive
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          node -e "
+            import { createClient } from '@supabase/supabase-js';
+            const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+
+            const ping = async () => {
+              const { data, error } = await supabase
+                .from('keep_alive_dummy')
+                .insert([{ ping_time: new Date().toISOString() }]);
+
+              if(error) console.log('Insert failed:', error);
+              else console.log('Insert successful, project stays active!', data);
+            };
+
+            ping();
+          "
