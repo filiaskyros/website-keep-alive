@@ -27,12 +27,21 @@ jobs:
             const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
             const ping = async () => {
+              // Εισαγωγή νέου ping
               const { data, error } = await supabase
                 .from('keep_alive_dummy')
                 .insert([{ ping_time: new Date().toISOString() }]);
+              if(error) console.error('Insert failed:', error);
+              else console.log('Insert successful!', data);
 
-              if(error) console.log('Insert failed:', error);
-              else console.log('Insert successful, project stays active!', data);
+              // Διαγραφή pings παλαιότερα από 7 μέρες
+              const sevenDaysAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString();
+              const { error: delError } = await supabase
+                .from('keep_alive_dummy')
+                .delete()
+                .lt('ping_time', sevenDaysAgo);
+              if(delError) console.error('Cleanup failed:', delError);
+              else console.log('Old pings deleted, table stays small!');
             };
 
             ping();
