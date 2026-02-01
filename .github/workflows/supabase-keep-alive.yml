@@ -1,4 +1,4 @@
-name: Supabase Keep Alive (With Dummy Table)
+name: Supabase Keep Alive (Chatbox AI)
 
 on:
   schedule:
